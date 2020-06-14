@@ -101,19 +101,19 @@ def prepare_code(text):
     ]
 
 
-def prepare_functions(module_name):
-    """get callables from __all__ and wrap them in FunctionWrapper"""
-    mod = importlib.import_module(module_name)
-    try:
-        names = mod.__all__
-    except AttributeError:
-        names = mod.__dict__
-    return {name: FunctionWrapper(getattr(mod, name))
-            for name in names if callable(name)}
+def prepare_functions(module_dict):
+    """get module callables and wrap them in FunctionWrapper
+
+        If __all__ is available, use it; otherwise fall back
+        to searching the whole namespace for callables
+    """
+    names = module_dict.get('__all__', module_dict)
+    return {name: FunctionWrapper(module_dict[name])
+            for name in names if callable(module_dict[name])}
 
 
 def main(args):
-    functions = prepare_functions(args.module)
+    functions = prepare_functions(args.module.__dict__)
     code = prepare_code(args.infile.read())
     args.infile.close()
     interpret(functions, code)
@@ -121,7 +121,8 @@ def main(args):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('module', help='the Python module providing the functions')
+    parser.add_argument('module', help='the Python module providing the functions',
+                        type=importlib.import_module)
     parser.add_argument('infile', help='the file with the commands. STDIN by default',
                         nargs='?', type=argparse.FileType(), default='-')
     return parser.parse_args()
