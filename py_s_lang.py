@@ -65,12 +65,25 @@ class FunctionWrapper:
 def interpret(functions, code):
     """interpret the given code with the given functions"""
     variables = {}
+    last_results = []
     for func_name, *args in code:
         try:
             func = functions[func_name]
         except KeyError:
             raise LangError('no such function "{}"'.format(func_name))
-        func.apply(args)
+        last_res_subst = dict(enumerate(reversed(last_results)))
+        subst_args = []
+        for arg in args:
+            try:
+                if False:  # TODO: for only a single substitution, use the object
+                    pass
+                else:
+                    arg = arg.substitute(last_res_subst, **variables)
+            except KeyError as e:
+                raise LangError(str(e))
+            else:
+                subst_args.append(arg)
+        last_results.append(func.apply(subst_args))
 
 
 def prepare_code(text):
