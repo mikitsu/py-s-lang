@@ -65,7 +65,7 @@ class FunctionWrapper:
     def apply(self, args, kwargs):
         """call the function with the specified arguments, enforcing type hints"""
         def convert(type_, value):
-            if isinstance(value, type_):
+            if isinstance(type_, type) and isinstance(value, type_):
                 return value
             else:
                 return type_(value)
