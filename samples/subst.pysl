@@ -1,0 +1,7 @@
+double 3
+echo $0  # last result
+echo $1  # second-last result (i.e. still 6)
+double 5
+echo $3  # 6 again
+echo $1  # 10 this time
+echo ${2}0  # 10 + 0 == 100
