@@ -6,6 +6,7 @@ import string
 import inspect
 import typing
 import importlib
+import runpy
 
 
 class LangError(Exception):
@@ -144,7 +145,7 @@ def prepare_functions(module_dict):
 
 
 def main(args):
-    functions = prepare_functions(args.module.__dict__)
+    functions = prepare_functions(args.input_dict)
     code = prepare_code(args.infile.read())
     args.infile.close()
     interpret(functions, code)
@@ -152,8 +153,21 @@ def main(args):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('module', help='the Python module providing the functions',
-                        type=importlib.import_module)
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
+        '-m', '--module',
+        help='an import path to a Python module providing the functions',
+        type=lambda m: importlib.import_module(m).__dict__,
+        dest='input_dict',
+        metavar='MODULE',
+    )
+    input_group.add_argument(
+        '-f', '--file',
+        help='a Python file providing the functions',
+        type=runpy.run_path,
+        dest='input_dict',
+        metavar='FILE',
+    )
     parser.add_argument('infile', help='the file with the commands. STDIN by default',
                         nargs='?', type=argparse.FileType(), default='-')
     return parser.parse_args()
