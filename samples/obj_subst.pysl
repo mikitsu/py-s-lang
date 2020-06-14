@@ -1,0 +1,2 @@
+get_object --first 123 --second 456 --third=789
+use_object $0
