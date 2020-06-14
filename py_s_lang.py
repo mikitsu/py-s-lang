@@ -13,12 +13,6 @@ class LangError(Exception):
     pass
 
 
-class FuncArgumentParser(argparse.ArgumentParser):
-    """don't exit on errors, but raise LangError"""
-    def error(self, message):
-        raise LangError(message)
-
-
 class VariableTemplate(string.Template):
     """also allow numbers"""
     idpattern = r'(?a:[_a-z0-9]+)'
