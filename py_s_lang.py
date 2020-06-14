@@ -1,4 +1,4 @@
-"""very simple shell-like language""" 
+"""very simple shell-like language"""
 import shlex
 import argparse
 import codecs
@@ -23,6 +23,34 @@ class VariableTemplate(string.Template):
     idpattern = r'(?a:[_a-z0-9]+)'
 
 
+def parse_arguments(argv):
+    """parse arguments and return (args, kwargs)"""
+    args = []
+    kwargs = {}
+    argv_iter = iter(argv)
+    for arg in argv_iter:
+        if arg == '--':
+            args.extend(argv_iter)
+        elif arg.startswith('--'):
+            if '=' in arg:
+                name, value = arg[2:].split('=', 1)
+            else:
+                name = arg[2:]
+                try:
+                    value = next(argv_iter)
+                except StopIteration:
+                    raise LangError('no value for keyword argument "{}"'
+                                    .format(name))
+            name = name.replace('-', '_')
+            if not name.isidentifier():
+                raise LangError('invalid argument name "{}"'
+                                .format(name))
+            kwargs[name] = value
+        else:
+            args.append(arg)
+    return args, kwargs
+
+
 class FunctionWrapper:
     def __init__(self, func):
         """wrap a function"""
@@ -30,40 +58,50 @@ class FunctionWrapper:
         self.sig = inspect.signature(func)
         # don't use sig.parameters[x].annotation to follow strings
         self.arg_types = typing.get_type_hints(func)
-        parser = FuncArgumentParser()
-        parser.add_argument('*positional', nargs='*')
-        for name, param in self.sig.parameters.items():
-            if param.kind in (inspect.Parameter.KEYWORD_ONLY,
-                              inspect.Parameter.POSITIONAL_OR_KEYWORD):
-                # no type= here bc. we also have positional arguments
-                parser.add_argument('--'+name, default=argparse.SUPPRESS)
-        self.parser = parser
 
-    def apply(self, argv):
-        """call the function with the specified arguments"""
-        args = self.parser.parse_args(argv)
-        positional = args.__dict__.pop('*positional')
+    parse = staticmethod(parse_arguments)
+
+    def apply(self, args, kwargs):
+        """call the function with the specified arguments, enforcing type hints"""
+        def convert(type_, value):
+            if isinstance(value, type_):
+                return value
+            else:
+                return type_(value)
+
         try:
-            bound = self.sig.bind(*positional, **args.__dict__)
+            bound = self.sig.bind(*args, **kwargs)
         except TypeError as e:
             raise LangError(str(e))
 
         for name, value in bound.arguments.items():
-            arg_type = self.arg_types.get(name, str)
+            arg_type = self.arg_types.get(name)
             param_kind = self.sig.parameters[name].kind
-            if param_kind is inspect.Parameter.VAR_POSITIONAL:
-                value = [arg_type(v) for v in value]
-            elif param_kind is inspect.Parameter.VAR_KEYWORD:
-                value = {k: arg_type(v) for k, v in value.items()}
-            else:
-                value = arg_type(value)
-            bound.arguments[name] = value
+            if arg_type is not None:
+                if param_kind is inspect.Parameter.VAR_POSITIONAL:
+                    value = [convert(arg_type, v) for v in value]
+                elif param_kind is inspect.Parameter.VAR_KEYWORD:
+                    value = {k: convert(arg_type, v) for k, v in value.items()}
+                else:
+                    value = convert(arg_type, value)
+                bound.arguments[name] = value
 
         return self.func(*bound.args, **bound.kwargs)
 
 
 def interpret(functions, code):
     """interpret the given code with the given functions"""
+    def apply_substitutions(value):
+        m = VariableTemplate.pattern.match(value)
+        name = m and (m.group('named') or m.group('braced'))
+        try:
+            if name and m.end() == len(value):
+                return substitutions[name]
+            else:
+                return VariableTemplate(value).substitute(substitutions)
+        except KeyError as e:
+            raise LangError(str(e))
+
     variables = {}
     last_results = []
     for func_name, *args in code:
@@ -71,34 +109,26 @@ def interpret(functions, code):
             func = functions[func_name]
         except KeyError:
             raise LangError('no such function "{}"'.format(func_name))
-        last_res_subst = {str(i): v for i, v in
-                          enumerate(reversed(last_results))}
-        subst_args = []
-        for arg in args:
-            try:
-                if False:  # TODO: for only a single substitution, use the object
-                    pass
-                else:
-                    arg = arg.substitute(last_res_subst, **variables)
-            except KeyError as e:
-                raise LangError(str(e))
-            else:
-                subst_args.append(arg)
-        last_results.append(func.apply(subst_args))
+
+        args, kwargs = func.parse(args)
+        substitutions = {str(i): v for i, v in
+                         enumerate(reversed(last_results))}
+        substitutions.update(variables)
+
+        subst_args = [apply_substitutions(a) for a in args]
+        subst_kwargs = {k: apply_substitutions(v) for k, v in kwargs.items()}
+
+        last_results.append(func.apply(subst_args, subst_kwargs))
 
 
 def prepare_code(text):
-    """parse the source, apply escapes and wrap with VariableTemplate"""
-    return [
-        [split_line[0], *map(VariableTemplate, split_line[1:])]
-        for split_line in
-        (shlex.split(
-            codecs.decode(line.encode('latin-1'), 'unicode_escape'),
-            comments=True
-         ) for line in
-         map(str.strip, text.replace('\\\n', '').splitlines())
-         if line
-        )
+    """parse the source and apply escapes"""
+    return [shlex.split(
+        codecs.decode(line.encode('latin-1'), 'unicode_escape'),
+        comments=True
+        ) for line in
+            map(str.strip, text.replace('\\\n', '').splitlines())
+            if line
     ]
 
 
