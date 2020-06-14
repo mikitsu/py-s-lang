@@ -71,7 +71,8 @@ def interpret(functions, code):
             func = functions[func_name]
         except KeyError:
             raise LangError('no such function "{}"'.format(func_name))
-        last_res_subst = dict(enumerate(reversed(last_results)))
+        last_res_subst = {str(i): v for i, v in
+                          enumerate(reversed(last_results))}
         subst_args = []
         for arg in args:
             try:
