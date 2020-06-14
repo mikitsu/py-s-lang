@@ -19,4 +19,4 @@ def repeater(text: str, times: int):
 def complicated(first: int, *more: int, kw_only: str, with_default: str = 'nothing'):
     print('first * sum(more) =', first * sum(more))
     print('the keyword argument is', kw_only)
-    print(with_default, 'was passed for the argumet that has a default')
+    print(with_default, 'was passed for the argument that has a default')
