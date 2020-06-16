@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 def test():
     """run samples and compare output"""
-    for name in glob.glob('samples/*.pysl.out'):
+    for name in glob.glob('examples/*.pysl.out'):
         r = subprocess.run(
             [sys.executable, 'py_s_lang.py', '-f', name[:-6], name[:-4]],
             capture_output=True,
