@@ -38,6 +38,7 @@ def test():
         )
         with open(name, 'rb') as f:
             expected_output = f.read()
+        assert not r.returncode, r.stderr
         assert r.stdout == expected_output, (r.stdout, expected_output)
         print(name, 'passed')
 
