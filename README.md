@@ -66,13 +66,22 @@ py-s-lang side:
 - use quoting for arguments with spaces
 - use backslash escapes like ``\n``, ``\t``, ``\xff``, ...
 - pass keyword arguments like shell options, i.e. ``--name=value`` or ``--name value``
-- everything after a single ``--`` is a positional argument
-- you may use ``$N`` substitutions, where ``N`` is ``commands up - 1``, i.e. 0 is the result of the last command, 1 the one before etc.
+- everything after a lone ``--`` is a positional argument
+- you can set variables with ``name= value``, where ``value`` will be be handled
+  according to substitution rules or with ``name= command lt least --one arg``
+  where the value returned by ``command`` with arguments will be assigned to ``name``
+  in the unlikely case you need to have a named variable with the output of a
+  command that takes no parameters, you can just run the command once and ``name= $0``
+  (see next bullet on why that works).
+  ``name`` should be a valid identifier, although currently nearly every string
+  works, as some characters may get special meanings in the future.
+- you may also use ``$N`` (with any number of digits) substitutions,
+  where ``N`` is ``commands up - 1``, i.e. 0 is the result of the last command, 1 the one before etc.
 - substitutions are always evaluated. Use ``$$`` for a literal ``$``. If your substitution has
     directly following alphanumeric/underscore characters, use braces: ``${123}456`` will substitute ``$123``
 - If a substitution appears alone in an argument, the raw Python object is passed to the function.
     Otherwise, it if first made a string. Note that annotation types are handled later.
-    In ``func $0 arg$1 'arg with $2 spaces' --keyword=$3 --other ${3}keyword``,
+    In ``func $0 arg$1 'arg with $2 spaces' --keyword=$3 --other ${4}keyword``,
     ``$0`` and ``$3`` are substituted as Python objects.
 
 ## How it works
@@ -83,7 +92,6 @@ see the [detailed implementation information](https://github.com/mik2k2/py-s-lan
 ## The future
 a.k.a. What I would like to add some time
 
-- Add variable assignments with ``name=`` as "function"
 - Special ``bool`` handling: create ``--option`` and ``--no-option`` flags
 - Add list and dict constructors (include with variable assignment maybe?)
 - Add set of common commands / some Python builtins
