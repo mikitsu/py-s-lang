@@ -1,0 +1,8 @@
+testvar= 3
+echo $testvar
+echo ${testvar}00
+one
+testone= $0
+echo $testone
+testonetwo= one some args
+echo $testonetwo

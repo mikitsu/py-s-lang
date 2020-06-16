@@ -97,23 +97,35 @@ def interpret(functions, code):
         except KeyError as e:
             raise LangError(str(e))
 
-    variables = {}
-    last_results = []
-    for func_name, *args in code:
+    def execute_function(func_name, *args):
         try:
             func = functions[func_name]
         except KeyError:
             raise LangError('no such function "{}"'.format(func_name))
 
         args, kwargs = func.parse(args)
-        substitutions = {str(i): v for i, v in
-                         enumerate(reversed(last_results))}
-        substitutions.update(variables)
-
         subst_args = [apply_substitutions(a) for a in args]
         subst_kwargs = {k: apply_substitutions(v) for k, v in kwargs.items()}
 
-        last_results.append(func.apply(subst_args, subst_kwargs))
+        return func.apply(subst_args, subst_kwargs)
+
+    variables = {}
+    last_results = []
+    for func_name, *args in code:
+        substitutions = {str(i): v for i, v in
+                         enumerate(reversed(last_results))}
+        substitutions.update(variables)
+        if func_name.endswith('='):
+            target = func_name[:-1]
+            if not args:
+                value = None
+            elif len(args) == 1:
+                value = apply_substitutions(args[0])
+            else:
+                value = execute_function(*args)
+            variables[target] = value
+        else:
+            last_results.append(execute_function(func_name, *args))
 
 
 def prepare_code(text):
