@@ -3,11 +3,15 @@
 
 Give your Python scripts a shell-like way to be used:
 
-    some_function arg1 arg2 --keyword-argument=value --other-keyword-arg "other value"
+    some_function arg1 arg2 \
+        --keyword-argument=value \
+        --other-keyword-arg "other value"
     other_function $0 and other stuff  # $0 is the last result. Any Python object.
 
-If you only use a single line, you can get a (very very) lightweight alternative to
+If you only use a single line, you can get a (very very) lightweight
+(as in missing lots of features) alternative to
 [click](https://palletsprojects.com/p/click/) or [invoke](https://www.pyinvoke.org/).
+When running from files, you can also use py-s-lang as a simple sandbox.
 Automatically make your scripts py-s-lang runnables with the built-in ``insert_runner``
 command:
 
@@ -16,9 +20,11 @@ command:
 
 ## Contents
 
-- How to use
-- How it works
-- The future
+- [How to use](#how-to-use)
+- [How it works](#how-it-works)
+  - [Details: Python side](#details-python-side)
+  - [Details: py-s-lang side](#details-py-s-lang-side)
+- [The future](#the-future)
 
 ## How to use
 
@@ -40,9 +46,7 @@ running ``path/to/script.py func_name arguments``.
 
 Also see the examples.
 
-### Details
-
-Python side:
+### Details: Python side
 
 - ``prepare_functions`` takes a (namespace) dictionary and wraps all callables with
     names in ``__all__`` (if present, otherwise all callables) with ``FunctionWrapper``
@@ -58,7 +62,7 @@ Python side:
 - ``prepare_code`` transforms a big block of text into a list of commands, handling
     backslash escapes, quoting, commants and line continuation
 
-py-s-lang side:
+### Details: py-s-lang side
 
 - commands are one each per line
 - lines may be continued with a single ``\`` charcter at the end
@@ -95,6 +99,8 @@ a.k.a. What I would like to add some time
 - Special ``bool`` handling: create ``--option`` and ``--no-option`` flags
 - Add list and dict constructors (include with variable assignment maybe?)
 - Add set of common commands / some Python builtins
+- Add options to ``run.py insert_runner`` to use something other than ``globals()``
 - Add ``if``/``while`` commands
 - Add command substitution
 - Don't expose functions starting with ``_`` (low priority bc. you can just use ``__all__``)
+- Add support for [PEP 593](https://www.python.org/dev/peps/pep-0593/) ``typing.Annotated`` (as soon as I decide to get Python 3.9)
