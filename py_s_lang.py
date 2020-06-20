@@ -130,13 +130,12 @@ def interpret(functions, code):
 
 def prepare_code(text):
     """parse the source and apply escapes"""
-    return [shlex.split(
-        codecs.decode(line.encode('latin-1'), 'unicode_escape'),
-        comments=True
-        ) for line in
-            map(str.strip, text.replace('\\\n', '').splitlines())
-            if line
-    ]
+    return filter(None, (
+        shlex.split(
+            codecs.decode(line.encode('latin-1'), 'unicode_escape'),
+            comments=True
+        ) for line in text.replace('\\\n', '').splitlines()
+    ))
 
 
 def prepare_functions(module_dict):

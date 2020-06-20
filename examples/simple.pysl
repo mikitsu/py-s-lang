@@ -1,4 +1,6 @@
 hello py-s-lang
 repeater 'wow, three functions!\n' 3
+# I'm a comment \
+continued as well
 complicated 2 -2 -1 0 1 2 3 \
 	--kw-only text
