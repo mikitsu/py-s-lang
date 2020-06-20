@@ -52,8 +52,11 @@ Also see the examples.
     names in ``__all__`` (if present, otherwise all callables) with ``FunctionWrapper``
 - ``FunctionWrapper`` wraps a function and provides the methods:
     - ``parse`` takes a sequence of string arguments and transforms them into a (args, kwargs)
-        pair. As of now, it does it generically, but this might change to having different
-        behaviour for different argument types (e.g. collecting arguments for a list)
+        pair. Function parameters whose annotation ``is bool`` are handled as
+        switches: ``--some-option`` is True and ``--no-some-option`` is False.
+        For positional boolean parameters, there is no extra support yet.
+        As of now, there is no special support for other types, but this might change to
+        having different behaviour for more types (e.g. collecting arguments for a list)
     - ``apply`` takes a (args, kwargs) pair and applies it to the wrapped function.
         Before application, types are converted to those specified as type hints
 - ``interpret`` takes a dictionary fo functions and a sequence of commands, a command being
@@ -71,10 +74,15 @@ Also see the examples.
 - use backslash escapes like ``\n``, ``\t``, ``\xff``, ...
 - pass keyword arguments like shell options, i.e. ``--name=value`` or ``--name value``
 - everything after a lone ``--`` is a positional argument
+- you can pass keyword boolean arguments as flags: ``--option`` for True
+  and ``--no-option`` for False. For positional boolean parameters,
+  you will have to use an empty string ``''`` for False and any text
+  for True. Since support may be expanded, I suggest using something like
+  "yes", "true" or "on" for True values.
 - you can set variables with ``name= value``, where ``value`` will be be handled
-  according to substitution rules or with ``name= command lt least --one arg``
-  where the value returned by ``command`` with arguments will be assigned to ``name``
-  in the unlikely case you need to have a named variable with the output of a
+  according to substitution rules or with ``name= command at least --one arg``
+  where the value returned by ``command`` with arguments will be assigned to ``name``.
+  In the unlikely case you need to have a named variable with the output of a
   command that takes no parameters, you can just run the command once and ``name= $0``
   (see next bullet on why that works).
   ``name`` should be a valid identifier, although currently nearly every string
@@ -96,7 +104,7 @@ see the [detailed implementation information](https://github.com/mik2k2/py-s-lan
 ## The future
 a.k.a. What I would like to add some time
 
-- Special ``bool`` handling: create ``--option`` and ``--no-option`` flags
+- Expand ``bool`` handling to positional arguments (via a ``bool`` subclass?)
 - Add list and dict constructors (include with variable assignment maybe?)
 - Add set of common commands / some Python builtins
 - Add options to ``run.py insert_runner`` to use something other than ``globals()``
