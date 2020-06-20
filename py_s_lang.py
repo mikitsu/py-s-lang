@@ -64,8 +64,10 @@ class FunctionWrapper:
         self.sig = inspect.signature(func)
         # don't use sig.parameters[x].annotation to follow strings
         self.arg_types = typing.get_type_hints(func)
+        self.bool_params = [k for k, v in self.arg_types.items() if v is bool]
 
-    parse = staticmethod(parse_arguments)
+    def parse(self, argv):
+        return parse_arguments(argv, option_kwargs=self.bool_params)
 
     def apply(self, args, kwargs):
         """call the function with the specified arguments, enforcing type hints"""
@@ -98,6 +100,8 @@ class FunctionWrapper:
 def interpret(functions, code):
     """interpret the given code with the given functions"""
     def apply_substitutions(value):
+        if not isinstance(value, str):
+            return value
         m = VariableTemplate.pattern.match(value)
         name = m and (m.group('named') or m.group('braced'))
         try:
