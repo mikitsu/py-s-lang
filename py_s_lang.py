@@ -18,8 +18,14 @@ class VariableTemplate(string.Template):
     idpattern = r'(?a:[_a-z0-9]+)'
 
 
-def parse_arguments(argv):
-    """parse arguments and return (args, kwargs)"""
+def parse_arguments(argv, option_kwargs=()):
+    """parse arguments and return (args, kwargs)
+
+        ``option_kwargs`` may be a container of flag options
+            which will be translated to True for --option
+            and False for --no-option. Before comparison,
+            dashes in the option are replaced by underscores.
+    """
     args = []
     kwargs = {}
     argv_iter = iter(argv)
@@ -29,14 +35,19 @@ def parse_arguments(argv):
         elif arg.startswith('--'):
             if '=' in arg:
                 name, value = arg[2:].split('=', 1)
+                name = name.replace('-', '_')
             else:
                 name = arg[2:]
-                try:
-                    value = next(argv_iter)
-                except StopIteration:
-                    raise LangError('no value for keyword argument "{}"'
-                                    .format(name))
-            name = name.replace('-', '_')
+                name = name.replace('-', '_')
+                if name[3*name.startswith('no_'):] in option_kwargs:
+                    value = not name.startswith('no_')
+                    name = name[3*name.startswith('no_'):]
+                else:
+                    try:
+                        value = next(argv_iter)
+                    except StopIteration:
+                        raise LangError('no value for keyword argument "{}"'
+                                        .format(name))
             if not name.isidentifier():
                 raise LangError('invalid argument name "{}"'
                                 .format(name))
