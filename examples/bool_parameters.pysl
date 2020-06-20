@@ -1,0 +1,6 @@
+switcher asdf --some-flag --whatever=qwert
+switcher --arg-1=asdf --whatever qwert --no-some-flag
+complicated abc --req-kw=qwe --some-other-bool
+complicated --no-some-bool zxc --req-kw=123 --some-other-bool
+# special bool flags only work with keyword arguments
+positional_only any text is true '' is not
