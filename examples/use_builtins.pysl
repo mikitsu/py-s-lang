@@ -1,0 +1,12 @@
+myList= list abc def ghi
+myDict= dict --a b --c=d --e f
+otherDict= dict --a=1 --e $myDict
+print $myList $myDict --sep=' & '
+takes_list $myList '123'
+takes_dict $myDict $otherDict
+# This is a very bad idea. fwrite closes the file afterwards.
+# I just want to be able to run this as test without keeping track
+# of some additional file somewhere.
+flush_stdout
+int 1
+fwrite $0 'hello\n'
