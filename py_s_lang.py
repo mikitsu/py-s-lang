@@ -7,6 +7,7 @@ import inspect
 import typing
 import importlib
 import runpy
+import sys
 
 
 class LangError(Exception):
@@ -16,6 +17,21 @@ class LangError(Exception):
 class VariableTemplate(string.Template):
     """also allow numbers"""
     idpattern = r'(?a:[_a-z0-9]+)'
+
+
+class BuiltinCommands:
+    def print(*values, end='\n', sep=' ', file=sys.stdout, flush: bool = False):
+        print(*values, end=end, sep=sep, file=file, flush=flush)
+    def fwrite(file, content):
+        with open(file, mode='w') as f:
+            f.write(content)
+    def fread(file, mode='r'):
+        with open(file, mode) as f:
+            return f.read()
+    def list(*args): return list(args)
+    def dict(**kwargs): return kwargs
+    def int(value: int): return value
+    def float(value: float): return value
 
 
 def parse_arguments(argv, option_kwargs=()):
@@ -153,15 +169,18 @@ def prepare_code(text):
     ))
 
 
-def prepare_functions(module_dict):
+def prepare_functions(module_dict, include_builtins=True):
     """get module callables and wrap them in FunctionWrapper
 
         If __all__ is available, use it; otherwise fall back
         to searching the whole namespace for callables
     """
+    functions = {k: v for k, v in BuiltinCommands.__dict__.items()
+                 if not k.startswith('_')}
     names = module_dict.get('__all__', module_dict)
-    return {name: FunctionWrapper(module_dict[name])
-            for name in names if callable(module_dict[name])}
+    functions.update({name: module_dict[name]
+                      for name in names if callable(module_dict[name])})
+    return {k: FunctionWrapper(v) for k, v in functions.items()}
 
 
 def main(args):
