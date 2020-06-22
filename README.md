@@ -21,9 +21,9 @@ command:
 ## Contents
 
 - [How to use](#how-to-use)
-- [How it works](#how-it-works)
   - [Details: Python side](#details-python-side)
   - [Details: py-s-lang side](#details-py-s-lang-side)
+- [How it works](#how-it-works)
 - [The future](#the-future)
 
 ## How to use
