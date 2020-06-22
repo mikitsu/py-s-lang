@@ -19,6 +19,6 @@ if __name__ == '__main__':
     except ImportError:
         import runpy, types
         py_s_lang = types.SimpleNamespace(**runpy.run_path('py_s_lang.py'))
-    functions = py_s_lang.prepare_functions(globals(), include_builtins=False)
+    functions = py_s_lang.prepare_functions(globals(), include_builtins=True)
     py_s_lang.interpret(functions, [sys.argv[1:]])
 # end automatically generated code
