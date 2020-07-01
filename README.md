@@ -29,10 +29,13 @@ command:
 ## How to use
 
 First, write your Python script. Add some functions/callables you want to expose to
-py-s-lang annotating your arguments. As of now, types are only used as converters
-(like ``type`` in ``argparse.ArgumentParser.add_argument``), so you'll want to avoid
-``bool``, ``dict``, ``list`` and other stuff that doesn't quite work with strings.
-I might add special support for it sometime. I reccommend you put the exposed functions into ``__all__``, as otherwise all functions will be exposed.
+py-s-lang annotating your arguments. As of now, types (except for ``bool``, see next sentence)
+are only used as converters (like ``type`` in ``argparse.ArgumentParser.add_argument``).
+Boolean arguments can be passed as flags, with ``--some-param`` converting to
+``True`` and ``--no-some-param`` converting to ``False``.
+For creating dicts and lists (that can be passed later on), there are the builtin functions ``dict`` and ``list``.
+I might add special support for positional boolean argumnets and direct list/dict arguments sometime.
+I reccommend you put the exposed functions into ``__all__``, as otherwise all functions will be exposed.
 
 Note that functions need to be introspectable, so using functions written in C
 (e.g. the builtin ``print`` in CPython) won't work.
@@ -106,9 +109,9 @@ a.k.a. What I would like to add some time
 
 - Expand ``bool`` handling to positional arguments (via a ``bool`` subclass?)
 - Add list and dict constructors (include with variable assignment maybe?)
-- Add set of common commands / some Python builtins
 - Add options to ``run.py insert_runner`` to use something other than ``globals()``
 - Add ``if``/``while`` commands
 - Add command substitution
+- Better error handling
 - Don't expose functions starting with ``_`` (low priority bc. you can just use ``__all__``)
 - Add support for [PEP 593](https://www.python.org/dev/peps/pep-0593/) ``typing.Annotated`` (as soon as I decide to get Python 3.9)
