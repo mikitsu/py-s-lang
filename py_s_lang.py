@@ -174,9 +174,17 @@ def prepare_functions(module_dict, include_builtins=True):
 
         If __all__ is available, use it; otherwise fall back
         to searching the whole namespace for callables
+
+        ``include_builtins`` may be an iterable of functions from
+            the builtin commands to also include or a true value
+            to include all available builtin commands
     """
-    functions = {k: v for k, v in BuiltinCommands.__dict__.items()
-                 if not k.startswith('_')}
+    if not isinstance(include_builtins, typing.Iterable):
+        if include_builtins:
+            include_builtins = (k for k in dir(BuiltinCommands) if not k.startswith('_'))
+        else:
+            include_builtins = ()
+    functions = {k: getattr(BuiltinCommands, k) for k in include_builtins}
     names = module_dict.get('__all__', module_dict)
     functions.update({name: module_dict[name]
                       for name in names if callable(module_dict[name])})
