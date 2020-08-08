@@ -109,7 +109,6 @@ a.k.a. What I would like to add some time
 
 - Expand ``bool`` handling to positional arguments (via a ``bool`` subclass?)
 - Add list and dict constructors (include with variable assignment maybe?)
-- Add options to ``run.py insert_runner`` to use something other than ``globals()``
 - Add ``if``/``while`` commands
 - Add command substitution
 - Better error handling

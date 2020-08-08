@@ -23,7 +23,10 @@ if __name__ == '__main__':
     except ImportError:
         import runpy, types
         py_s_lang = types.SimpleNamespace(**runpy.run_path('{code_path}'))
-    functions = py_s_lang.prepare_functions(globals(), include_builtins={include_builtins})
+    functions = py_s_lang.prepare_functions(
+        {function_namespace},
+        include_builtins={include_builtins},
+    )
     py_s_lang.interpret(functions, [sys.argv[1:]])
 # end automatically generated code
 """
@@ -43,12 +46,16 @@ def test():
         print(name, 'passed')
 
 
-def insert_runner(file: argparse.FileType('a'), include_builtins: bool = False):
+def insert_runner(file: argparse.FileType('a'),
+                  include_builtins: bool = False,
+                  function_namespace: str = 'globals()',
+                  ):
     """add runner code to the given file"""
     py_s_lang_path = os.path.relpath(py_s_lang.__file__)
     file.write(runner_code.format(
         code_path=py_s_lang_path,
         include_builtins=include_builtins,
+        function_namespace=function_namespace,
     ))
     file.close()
 
