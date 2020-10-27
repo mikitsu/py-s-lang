@@ -16,7 +16,7 @@ class LangError(Exception):
 
 class VariableTemplate(string.Template):
     """also allow numbers"""
-    idpattern = r'(?a:[_a-z0-9]+)'
+    idpattern = '[_a-zA-Z0-9]+'
 
 
 class BuiltinCommands:
