@@ -80,7 +80,8 @@ class FunctionWrapper:
         self.sig = inspect.signature(func)
         # don't use sig.parameters[x].annotation to follow strings
         self.arg_types = typing.get_type_hints(func)
-        self.bool_params = [k for k, v in self.arg_types.items() if v is bool]
+        self.bool_params = [k for k, v in self.arg_types.items()
+                            if 'bool' in getattr(v, '__name__', '').lower()]
 
     def parse(self, argv):
         return parse_arguments(argv, option_kwargs=self.bool_params)

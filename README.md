@@ -55,9 +55,13 @@ Also see the examples.
     names in ``__all__`` (if present, otherwise all callables) with ``FunctionWrapper``
 - ``FunctionWrapper`` wraps a function and provides the methods:
     - ``parse`` takes a sequence of string arguments and transforms them into a (args, kwargs)
-        pair. Function parameters whose annotation ``is bool`` are handled as
-        switches: ``--some-option`` is True and ``--no-some-option`` is False.
-        For positional boolean parameters, there is no extra support yet.
+        pair. Boolean function parameters can be used as switches:
+        ``--some-option`` is True and ``--no-some-option`` is False.
+        Boolean arguments may also be given positionally, with standard conversion.
+        Switch support is enabled if the ``__name__`` of the annotation contains
+        ``'bool'`` (case-insensitively), so you might want to add your own boolean
+        conversion function that makes ``'off'``, ``'false'``, ``'0'`` etc. false
+        -- just include ``bool`` in the name. See ``examples/text_bool.py`` for an example.
         As of now, there is no special support for other types, but this might change to
         having different behaviour for more types (e.g. collecting arguments for a list)
     - ``apply`` takes a (args, kwargs) pair and applies it to the wrapped function.
@@ -79,9 +83,9 @@ Also see the examples.
 - everything after a lone ``--`` is a positional argument
 - you can pass keyword boolean arguments as flags: ``--option`` for True
   and ``--no-option`` for False. For positional boolean parameters,
-  you will have to use an empty string ``''`` for False and any text
-  for True. Since support may be expanded, I suggest using something like
-  "yes", "true" or "on" for True values.
+  supports depends on whether a converter was specified (see
+  [Python details](#details-python-side)). To stay on the safe side, use the empty
+  string (``''``) for false values and an unambigous text (e.g. "true") for true values.
 - you can set variables with ``name= value``, where ``value`` will be be handled
   according to substitution rules or with ``name= command at least --one arg``
   where the value returned by ``command`` with arguments will be assigned to ``name``.
@@ -107,7 +111,6 @@ see the [detailed implementation information](https://github.com/mik2k2/py-s-lan
 ## The future
 a.k.a. What I would like to add some time
 
-- Expand ``bool`` handling to positional arguments (via a ``bool`` subclass?)
 - Add list and dict constructors (include with variable assignment maybe?)
 - Add ``if``/``while`` commands
 - Add command substitution

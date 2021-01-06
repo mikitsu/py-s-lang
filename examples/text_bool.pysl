@@ -1,0 +1,12 @@
+is_true false
+is_true False
+is_true off
+is_true whatever
+is_true 0
+get_object
+is_true $0
+get_zero
+is_true $0
+is_true $0
+is_true --value
+is_true --no-value
