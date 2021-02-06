@@ -16,7 +16,7 @@ class LangError(Exception):
 
 class VariableTemplate(string.Template):
     """also allow numbers"""
-    idpattern = '[_a-zA-Z0-9]+'
+    idpattern = '[_a-zA-Z0-9]+|\\)'  # escape ), allow $( substitution)
 
 
 class BuiltinCommands:
@@ -48,7 +48,7 @@ def parse_arguments(argv, option_kwargs=()):
     for arg in argv_iter:
         if arg == '--':
             args.extend(argv_iter)
-        elif arg.startswith('--'):
+        elif isinstance(arg, str) and arg.startswith('--'):
             if '=' in arg:
                 name, value = arg[2:].split('=', 1)
                 name = name.replace('-', '_')
@@ -129,19 +129,47 @@ def interpret(functions, code):
         except KeyError as e:
             raise LangError(str(e))
 
+    def apply_command_substitutions(args):
+        args = list(args)
+        i = 0
+        while i < len(args):
+            if not (isinstance(args[i], str) and args[i].startswith('$(')):
+                i += 1
+                continue
+            args[i] = args[i][2:]
+            if not args[i]:
+                del args[i]
+            j = i
+            c = 1
+            while c:
+                j += 1
+                if j == len(args):
+                    raise LangError('Unmatched $(')
+                c += (args[j].startswith('$(')
+                      - (len(args[j])
+                         - len(args[j].rstrip(')'))
+                         - args[j].rstrip(')').endswith('$')))
+            args[j] = args[j][:-1]
+            if not args[j]:
+                del args[j]
+                j -= 1
+            args = [*args[:i], execute_function(*args[i:j+1]), *args[j+1:]]
+        return args
+
+
     def execute_function(func_name, *args):
         try:
             func = functions[func_name]
         except KeyError:
             raise LangError('no such function "{}"'.format(func_name))
 
-        args, kwargs = func.parse(args)
+        args, kwargs = func.parse(apply_command_substitutions(args))
         subst_args = [apply_substitutions(a) for a in args]
         subst_kwargs = {k: apply_substitutions(v) for k, v in kwargs.items()}
 
         return func.apply(subst_args, subst_kwargs)
 
-    variables = {}
+    variables = {')': ')'}  # escape
     last_results = []
     for func_name, *args in code:
         substitutions = {str(i): v for i, v in
