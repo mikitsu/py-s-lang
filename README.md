@@ -69,6 +69,7 @@ Also see the examples.
 - ``interpret`` takes a dictionary fo functions and a sequence of commands, a command being
     ``['func_name', 'some', 'arguments']``. It executes them sequentially, keeping track
     of the last results (used for ``$0``, ``$1``, ... substitution).
+    Here, command substitution is handled as well, baisically
 - ``prepare_code`` transforms a big block of text into a list of commands, handling
     backslash escapes, quoting, commants and line continuation
 
@@ -99,9 +100,14 @@ Also see the examples.
 - substitutions are always evaluated. Use ``$$`` for a literal ``$``. If your substitution has
     directly following alphanumeric/underscore characters, use braces: ``${123}456`` will substitute ``$123``
 - If a substitution appears alone in an argument, the raw Python object is passed to the function.
-    Otherwise, it if first made a string. Note that annotation types are handled later.
+    Otherwise, it is first made a string. Note that annotation types are handled later.
     In ``func $0 arg$1 'arg with $2 spaces' --keyword=$3 --other ${4}keyword``,
     ``$0`` and ``$3`` are substituted as Python objects.
+- You can use command substitution (or at least something looking like it).
+  Enclose the command to be substituted in ``$()``, as in ``$(list 1 2 3)``.
+  You may also nest (``$(list $(dict --a xyz) 2 3)``).
+  Note that command substitution is not allowed inside strings or for the function name.
+  Closing parenthesis meant as text must be escaped as ``$)``.
 
 ## How it works
 
@@ -111,9 +117,9 @@ see the [detailed implementation information](https://github.com/mik2k2/py-s-lan
 ## The future
 a.k.a. What I would like to add some time
 
-- Add list and dict constructors (include with variable assignment maybe?)
 - Add ``if``/``while`` commands
-- Add command substitution
+- Improve command substitution
+- Add "redirection", i.e. read/write parameters from files
 - Better error handling
 - Don't expose functions starting with ``_`` (low priority bc. you can just use ``__all__``)
 - Add support for [PEP 593](https://www.python.org/dev/peps/pep-0593/) ``typing.Annotated`` (as soon as I decide to get Python 3.9)
