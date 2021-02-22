@@ -1,0 +1,9 @@
+print $(list 1 2 3)
+print $( list 1 2 3 ) text
+print $(list $(dict --a 3 --b $(list 34)))
+print $(list $(dict --a 3 --b $(list 34)) b)
+print $(list)
+print escaped $)
+print $(list $(list escaped $)))
+print $(list $(list escaped $$$)))
+print $(list $(list escaped $$))

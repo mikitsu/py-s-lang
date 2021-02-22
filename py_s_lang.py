@@ -130,6 +130,12 @@ def interpret(functions, code):
             raise LangError(str(e))
 
     def apply_command_substitutions(args):
+        def get_paren_delta(arg):
+            def count_ending(v, suffix):
+                return len(v) - len(v.rstrip(suffix))
+            ends = count_ending(arg, ')') - count_ending(arg.rstrip(')'), '$') % 2
+            return arg.startswith('$(') - ends
+
         args = list(args)
         i = 0
         while i < len(args):
@@ -140,15 +146,13 @@ def interpret(functions, code):
             if not args[i]:
                 del args[i]
             j = i
-            c = 1
+            c = 1 + get_paren_delta(args[i])
+            assert c >= 0
             while c:
                 j += 1
                 if j == len(args):
                     raise LangError('Unmatched $(')
-                c += (args[j].startswith('$(')
-                      - (len(args[j])
-                         - len(args[j].rstrip(')'))
-                         - args[j].rstrip(')').endswith('$')))
+                c += get_paren_delta(args[j])
             args[j] = args[j][:-1]
             if not args[j]:
                 del args[j]
